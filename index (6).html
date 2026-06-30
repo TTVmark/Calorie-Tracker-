@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Daily Log</title>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Daily Log" />
+<meta name="theme-color" content="#F1F2EC" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesque:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F2EC;--surface:#FCFBF7;--surface-2:#F7F6F0;--ink:#23231D;--muted:#8C897D;--faint:#B6B3A6;
+    --line:#E4E2D8;--line-strong:#D6D3C7;--protein:#B0556A;--carbs:#D29A3E;--fat:#6F8A5E;
+    --protein-soft:#f3e4e8;--carbs-soft:#f6ecd9;--fat-soft:#e7ede0;--radius:18px;
+    --shadow:0 1px 2px rgba(40,38,30,.04), 0 8px 24px -16px rgba(40,38,30,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:"Hanken Grotesque",system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;line-height:1.45;min-height:100vh;}
+  .wrap{max-width:640px;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 20px calc(120px + env(safe-area-inset-bottom));}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;}
+  .datenav{display:flex;align-items:center;gap:6px;}
+  .navbtn{width:34px;height:34px;border:none;border-radius:10px;cursor:pointer;background:transparent;color:var(--muted);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
+  .navbtn:hover{background:var(--surface-2);color:var(--ink);}
+  .datelabel{text-align:center;min-width:132px;}
+  .datelabel .rel{font-family:"Fraunces",serif;font-weight:600;font-size:20px;letter-spacing:-.01em;display:block;line-height:1.1;}
+  .datelabel .full{font-size:12px;color:var(--muted);letter-spacing:.02em;}
+  .iconbtn{border:1px solid var(--line);background:var(--surface);color:var(--muted);height:34px;padding:0 14px;border-radius:10px;cursor:pointer;font:inherit;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:border-color .15s,color .15s,background .15s;-webkit-tap-highlight-color:transparent;}
+  .iconbtn:hover{border-color:var(--line-strong);color:var(--ink);}
+  .iconbtn.active{background:var(--ink);border-color:var(--ink);color:var(--surface);}
+
+  .summary{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px 26px 22px;box-shadow:var(--shadow);margin-bottom:18px;}
+  .kcal-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .kcal-big{font-family:"Fraunces",serif;font-weight:600;font-size:52px;letter-spacing:-.025em;line-height:.95;}
+  .kcal-target{font-size:20px;color:var(--faint);font-family:"Fraunces",serif;font-weight:500;}
+  .kcal-unit{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;align-self:center;}
+  .kcal-remain{font-size:13px;color:var(--muted);margin-top:2px;}
+  .kcal-remain b{color:var(--ink);font-weight:600;}
+  .ribbon{height:12px;border-radius:7px;background:var(--surface-2);display:flex;overflow:hidden;margin:20px 0 16px;border:1px solid var(--line);}
+  .ribbon span{display:block;height:100%;transition:width .55s cubic-bezier(.4,0,.1,1);}
+  .ribbon .seg-p{background:var(--protein);}.ribbon .seg-c{background:var(--carbs);}.ribbon .seg-f{background:var(--fat);}
+  .legend{display:flex;gap:22px;flex-wrap:wrap;}
+  .leg{display:flex;flex-direction:column;gap:2px;}
+  .leg .lab{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em;}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .dot.p{background:var(--protein);}.dot.c{background:var(--carbs);}.dot.f{background:var(--fat);}
+  .leg .val{font-family:"Fraunces",serif;font-weight:600;font-size:19px;letter-spacing:-.01em;padding-left:16px;}
+  .leg .val small{font-family:"Hanken Grotesque";font-size:12px;color:var(--faint);font-weight:600;}
+
+  .meal{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;box-shadow:var(--shadow);overflow:hidden;}
+  .meal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 12px;}
+  .meal-name{font-family:"Fraunces",serif;font-weight:600;font-size:18px;letter-spacing:-.01em;color:var(--ink);border:none;background:transparent;padding:3px 6px;margin-left:-6px;border-radius:7px;width:auto;min-width:60px;max-width:60%;font-feature-settings:normal;}
+  .meal-name:hover{background:var(--surface-2);}
+  .meal-name:focus{outline:none;background:var(--surface-2);box-shadow:0 0 0 2px var(--line-strong);}
+  .meal-sum{display:flex;align-items:center;gap:12px;}
+  .meal-kcal{font-family:"Fraunces",serif;font-weight:600;font-size:16px;color:var(--ink);}
+  .meal-kcal small{font-family:"Hanken Grotesque";font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.04em;}
+  .meal-del{border:none;background:transparent;color:var(--faint);cursor:pointer;width:26px;height:26px;border-radius:7px;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
+  .meal-del:hover{background:var(--protein-soft);color:var(--protein);}
+  .items{padding:0 12px;}
+  .item{display:flex;align-items:center;gap:10px;padding:11px 6px;border-top:1px solid var(--line);cursor:pointer;border-radius:8px;transition:background .12s;-webkit-tap-highlight-color:transparent;}
+  .item:hover{background:var(--surface-2);}
+  .item-name{flex:1;font-size:14.5px;font-weight:500;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .item-macros{display:flex;gap:10px;font-size:12px;color:var(--muted);font-weight:600;align-items:center;}
+  .item-macros .m{display:inline-flex;align-items:center;gap:4px;}
+  .item-macros .m i{width:6px;height:6px;border-radius:50%;display:inline-block;}
+  .item-macros .m.p i{background:var(--protein);}.item-macros .m.c i{background:var(--carbs);}.item-macros .m.f i{background:var(--fat);}
+  .item-kcal{font-family:"Fraunces",serif;font-weight:600;font-size:15px;min-width:46px;text-align:right;}
+  .item-x{border:none;background:transparent;color:var(--faint);cursor:pointer;width:28px;height:28px;border-radius:6px;font-size:16px;flex:none;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
+  .item-x:hover{background:var(--protein-soft);color:var(--protein);}
+  .empty{padding:14px 8px;border-top:1px solid var(--line);color:var(--faint);font-size:13px;font-style:italic;}
+  .addzone{padding:8px 12px 14px;border-top:1px solid var(--line);}
+  .addbtn{width:100%;border:1px dashed var(--line-strong);background:transparent;color:var(--muted);padding:12px;border-radius:10px;cursor:pointer;font:inherit;font-size:13px;font-weight:600;letter-spacing:.02em;transition:border-color .15s,color .15s,background .15s;-webkit-tap-highlight-color:transparent;}
+  .addbtn:hover{border-color:var(--ink);color:var(--ink);background:var(--surface-2);}
+  .form{display:grid;grid-template-columns:1fr;gap:8px;background:var(--surface-2);padding:12px;border-radius:12px;border:1px solid var(--line);}
+  .form input{font:inherit;font-size:16px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:9px;padding:10px 11px;width:100%;font-feature-settings:"tnum" 1;}
+  .form input::placeholder{color:var(--faint);}
+  .form input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 2px rgba(35,35,29,.08);}
+  .num-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .num-field{position:relative;}
+  .num-field label{position:absolute;top:-7px;left:9px;background:var(--surface-2);padding:0 4px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  .num-field.p label{color:var(--protein);}.num-field.c label{color:var(--carbs);}.num-field.f label{color:var(--fat);}
+  .num-field input{text-align:center;padding-left:6px;padding-right:6px;}
+  .form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:2px;}
+  .btn{font:inherit;font-size:14px;font-weight:600;border-radius:9px;padding:10px 16px;cursor:pointer;border:1px solid transparent;transition:opacity .15s,background .15s,border-color .15s;-webkit-tap-highlight-color:transparent;}
+  .btn-primary{background:var(--ink);color:var(--surface);}
+  .btn-primary:hover{opacity:.88;}
+  .btn-ghost{background:transparent;color:var(--muted);border-color:var(--line-strong);}
+  .btn-ghost:hover{color:var(--ink);border-color:var(--ink);}
+  .add-meal{width:100%;border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:14px;border-radius:var(--radius);cursor:pointer;font:inherit;font-size:14px;font-weight:600;transition:border-color .15s,color .15s;box-shadow:var(--shadow);-webkit-tap-highlight-color:transparent;}
+  .add-meal:hover{border-color:var(--ink);color:var(--ink);}
+
+  .footer{margin-top:18px;padding:2px 4px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;line-height:1.3;}
+  .status .ind{width:8px;height:8px;border-radius:50%;background:var(--fat);flex:none;}
+  .status.err .ind{background:var(--protein);}
+  .footer-actions{display:flex;gap:4px;flex:none;}
+  .txtbtn{border:none;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:8px 12px;border-radius:9px;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
+  .txtbtn:hover{background:var(--surface-2);color:var(--ink);}
+
+  .scrim{position:fixed;inset:0;background:rgba(35,35,29,.28);backdrop-filter:blur(2px);display:none;align-items:flex-start;justify-content:center;padding:64px 20px;z-index:40;}
+  .scrim.open{display:flex;}
+  .sheet{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 20px 60px -20px rgba(40,38,30,.4);width:100%;max-width:380px;padding:24px;}
+  .sheet h2{font-family:"Fraunces",serif;font-weight:600;font-size:21px;margin:0 0 4px;letter-spacing:-.01em;}
+  .sheet p{margin:0 0 18px;color:var(--muted);font-size:13px;}
+  .sheet .field{margin-bottom:14px;}
+  .sheet .field label{display:block;font-size:12px;font-weight:700;letter-spacing:.03em;color:var(--muted);margin-bottom:5px;}
+  .sheet .field input{width:100%;font:inherit;font-size:16px;border:1px solid var(--line-strong);background:var(--surface-2);border-radius:10px;padding:11px 13px;color:var(--ink);}
+  .sheet .field input:focus{outline:none;border-color:var(--ink);}
+  .sheet .row4{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .sheet-actions{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:8px;}
+
+  @media (max-width:430px){
+    .wrap{padding-left:14px;padding-right:14px;}
+    .kcal-big{font-size:46px;}
+    .legend{gap:16px;}
+    .item-macros{display:none;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;}}
+  .fade{animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="datenav">
+      <button class="navbtn" id="prevDay" title="Previous day" aria-label="Previous day">‹</button>
+      <div class="datelabel" id="dateLabel"><span class="rel">Today</span><span class="full"></span></div>
+      <button class="navbtn" id="nextDay" title="Next day" aria-label="Next day">›</button>
+    </div>
+    <button class="iconbtn" id="targetsBtn" title="Set daily targets">Targets</button>
+  </div>
+
+  <div class="summary">
+    <div class="kcal-row">
+      <span class="kcal-big" id="totalKcal">0</span>
+      <span class="kcal-target" id="targetKcal"></span>
+      <span class="kcal-unit">kcal</span>
+    </div>
+    <div class="kcal-remain" id="kcalRemain"></div>
+    <div class="ribbon" id="ribbon" aria-hidden="true"><span class="seg-p" style="width:0"></span><span class="seg-c" style="width:0"></span><span class="seg-f" style="width:0"></span></div>
+    <div class="legend">
+      <div class="leg"><span class="lab"><span class="dot p"></span>Protein</span><span class="val" id="legP">0<small>g</small></span></div>
+      <div class="leg"><span class="lab"><span class="dot c"></span>Carbs</span><span class="val" id="legC">0<small>g</small></span></div>
+      <div class="leg"><span class="lab"><span class="dot f"></span>Fat</span><span class="val" id="legF">0<small>g</small></span></div>
+    </div>
+  </div>
+
+  <div id="meals"></div>
+  <button class="add-meal" id="addMeal">+ Add meal</button>
+
+  <div class="footer">
+    <div class="status" id="status"><span class="ind"></span><span id="statusText">Saved on this iPhone</span></div>
+    <div class="footer-actions">
+      <button class="txtbtn" id="exportBtn">Export</button>
+      <button class="txtbtn" id="importBtn">Import</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none" />
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h2 id="sheetTitle">Daily targets</h2>
+    <p>Optional. Leave blank to just track totals.</p>
+    <div class="field"><label for="tKcal">Calories</label><input type="number" inputmode="numeric" id="tKcal" placeholder="e.g. 2200" /></div>
+    <div class="row4">
+      <div class="field"><label for="tP">Protein (g)</label><input type="number" inputmode="numeric" id="tP" placeholder="—" /></div>
+      <div class="field"><label for="tC">Carbs (g)</label><input type="number" inputmode="numeric" id="tC" placeholder="—" /></div>
+      <div class="field"><label for="tF">Fat (g)</label><input type="number" inputmode="numeric" id="tF" placeholder="—" /></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="clearTargets">Clear</button>
+      <div style="display:flex;gap:8px;"><button class="btn btn-ghost" id="cancelTargets">Cancel</button><button class="btn btn-primary" id="saveTargets">Save</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const uid = () => Math.random().toString(36).slice(2,9);
+  const num = v => { const n=parseFloat(v); return isFinite(n)&&n>0?Math.round(n):0; };
+  const fmt = n => Math.round(n).toLocaleString("en-US");
+
+  // on-device storage
+  function get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  let current = new Date(); current.setHours(0,0,0,0);
+  function keyOf(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+  function relLabel(d){ const t=new Date();t.setHours(0,0,0,0);const diff=Math.round((d-t)/86400000);
+    if(diff===0)return"Today";if(diff===-1)return"Yesterday";if(diff===1)return"Tomorrow";return d.toLocaleDateString("en-US",{weekday:"long"});}
+  function fullLabel(d){ return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); }
+
+  let meals=[], targets=null;
+  function freshMeals(){ return [{id:uid(),name:"Meal 1",items:[]},{id:uid(),name:"Meal 2",items:[]},{id:uid(),name:"Meal 3",items:[]}]; }
+  function loadDay(){ const raw=get("day:"+keyOf(current)); if(raw){ try{ meals=JSON.parse(raw).meals||freshMeals(); }catch(e){ meals=freshMeals(); } } else meals=freshMeals(); }
+  function saveDay(){ set("day:"+keyOf(current), JSON.stringify({meals})); flashSaved(); }
+  function loadTargets(){ const raw=get("targets"); if(raw){ try{ targets=JSON.parse(raw); }catch(e){ targets=null; } } }
+  function saveTargets(){ set("targets", targets?JSON.stringify(targets):""); }
+
+  let flashTimer=null;
+  function flashSaved(){ const el=$("statusText"); el.textContent="Saved"; clearTimeout(flashTimer); flashTimer=setTimeout(()=>el.textContent="Saved on this iPhone",1200); }
+
+  function totals(){ let k=0,p=0,c=0,f=0; meals.forEach(m=>m.items.forEach(it=>{k+=it.kcal;p+=it.protein;c+=it.carbs;f+=it.fat;})); return {k,p,c,f}; }
+  function mealKcal(m){ return m.items.reduce((s,it)=>s+it.kcal,0); }
+
+  function renderSummary(){
+    const t=totals();
+    $("totalKcal").textContent=fmt(t.k);
+    const hasTk=targets&&targets.kcal>0;
+    $("targetKcal").textContent=hasTk?"/ "+fmt(targets.kcal):"";
+    if(hasTk){ const rem=targets.kcal-t.k; $("kcalRemain").innerHTML=rem>=0?"<b>"+fmt(rem)+"</b> remaining":"<b>"+fmt(-rem)+"</b> over"; } else $("kcalRemain").textContent="";
+    const pc=t.p*4,cc=t.c*4,fc=t.f*9,tot=pc+cc+fc,segs=$("ribbon").children;
+    if(tot>0){segs[0].style.width=(pc/tot*100)+"%";segs[1].style.width=(cc/tot*100)+"%";segs[2].style.width=(fc/tot*100)+"%";}
+    else segs[0].style.width=segs[1].style.width=segs[2].style.width="0";
+    const tg=(g,key)=>(targets&&targets[key]>0)?fmt(g)+"<small> / "+fmt(targets[key])+"g</small>":fmt(g)+"<small>g</small>";
+    $("legP").innerHTML=tg(t.p,"protein");$("legC").innerHTML=tg(t.c,"carbs");$("legF").innerHTML=tg(t.f,"fat");
+  }
+  function macroSpan(cls,letter,val){ return '<span class="m '+cls+'"><i></i>'+letter+' '+fmt(val)+'</span>'; }
+  function renderMeals(){
+    const root=$("meals"); root.innerHTML="";
+    meals.forEach((m,mi)=>{
+      const card=document.createElement("div"); card.className="meal fade";
+      const head=document.createElement("div"); head.className="meal-head";
+      const nameInput=document.createElement("input"); nameInput.className="meal-name"; nameInput.value=m.name; nameInput.setAttribute("aria-label","Meal name");
+      nameInput.addEventListener("change",()=>{ m.name=nameInput.value.trim()||("Meal "+(mi+1)); nameInput.value=m.name; saveDay(); });
+      nameInput.addEventListener("keydown",e=>{ if(e.key==="Enter") nameInput.blur(); });
+      const sum=document.createElement("div"); sum.className="meal-sum"; sum.innerHTML='<span class="meal-kcal">'+fmt(mealKcal(m))+' <small>kcal</small></span>';
+      const del=document.createElement("button"); del.className="meal-del"; del.title="Remove meal"; del.setAttribute("aria-label","Remove meal"); del.textContent="×";
+      del.addEventListener("click",()=>{ meals.splice(mi,1); saveDay(); renderAll(); });
+      sum.appendChild(del); head.appendChild(nameInput); head.appendChild(sum); card.appendChild(head);
+
+      const items=document.createElement("div"); items.className="items";
+      if(m.items.length===0){ const e=document.createElement("div"); e.className="empty"; e.textContent="No items yet."; items.appendChild(e); }
+      m.items.forEach((it,ii)=>{
+        const row=document.createElement("div"); row.className="item"; row.tabIndex=0;
+        row.innerHTML='<span class="item-name"></span><span class="item-macros">'+macroSpan("c","C",it.carbs)+macroSpan("p","P",it.protein)+macroSpan("f","F",it.fat)+'</span><span class="item-kcal">'+fmt(it.kcal)+'</span>';
+        row.querySelector(".item-name").textContent=it.name||"Item";
+        const x=document.createElement("button"); x.className="item-x"; x.textContent="×"; x.title="Delete item"; x.setAttribute("aria-label","Delete item");
+        x.addEventListener("click",ev=>{ ev.stopPropagation(); m.items.splice(ii,1); saveDay(); renderAll(); });
+        row.appendChild(x);
+        const openEdit=()=>row.replaceWith(buildForm(it,v=>{Object.assign(it,v);saveDay();renderAll();},()=>renderAll()));
+        row.addEventListener("click",openEdit);
+        row.addEventListener("keydown",e=>{ if(e.key==="Enter") openEdit(); });
+        items.appendChild(row);
+      });
+      card.appendChild(items);
+
+      const az=document.createElement("div"); az.className="addzone";
+      const addBtn=document.createElement("button"); addBtn.className="addbtn"; addBtn.textContent="+ Add item";
+      addBtn.addEventListener("click",()=>{ az.innerHTML=""; az.appendChild(buildForm(null,v=>{m.items.push(Object.assign({id:uid()},v));saveDay();renderAll();},()=>renderAll())); az.querySelector("input").focus(); });
+      az.appendChild(addBtn); card.appendChild(az);
+      root.appendChild(card);
+    });
+  }
+  function buildForm(values,onSave,onCancel){
+    const v=values||{name:"",kcal:0,carbs:0,protein:0,fat:0};
+    const form=document.createElement("div"); form.className="form fade";
+    form.innerHTML='<input type="text" class="f-name" placeholder="Food name" aria-label="Food name" /><div class="num-grid"><div class="num-field"><label>Cal</label><input type="number" inputmode="numeric" class="f-kcal" placeholder="0" aria-label="Calories" /></div><div class="num-field c"><label>Carbs</label><input type="number" inputmode="numeric" class="f-carbs" placeholder="0" aria-label="Carbs grams" /></div><div class="num-field p"><label>Protein</label><input type="number" inputmode="numeric" class="f-protein" placeholder="0" aria-label="Protein grams" /></div><div class="num-field f"><label>Fat</label><input type="number" inputmode="numeric" class="f-fat" placeholder="0" aria-label="Fat grams" /></div></div><div class="form-actions"><button class="btn btn-ghost f-cancel">Cancel</button><button class="btn btn-primary f-save">'+(values?"Save":"Add")+'</button></div>';
+    const q=s=>form.querySelector(s);
+    q(".f-name").value=v.name||""; if(v.kcal)q(".f-kcal").value=v.kcal; if(v.carbs)q(".f-carbs").value=v.carbs; if(v.protein)q(".f-protein").value=v.protein; if(v.fat)q(".f-fat").value=v.fat;
+    const commit=()=>{ const d={name:q(".f-name").value.trim(),kcal:num(q(".f-kcal").value),carbs:num(q(".f-carbs").value),protein:num(q(".f-protein").value),fat:num(q(".f-fat").value)};
+      if(!d.name&&!d.kcal&&!d.carbs&&!d.protein&&!d.fat){ onCancel(); return; } if(!d.name)d.name="Item"; onSave(d); };
+    q(".f-save").addEventListener("click",commit); q(".f-cancel").addEventListener("click",onCancel);
+    form.querySelectorAll("input").forEach(inp=>inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();commit();} if(e.key==="Escape")onCancel(); }));
+    return form;
+  }
+  function renderDate(){ $("dateLabel").querySelector(".rel").textContent=relLabel(current); $("dateLabel").querySelector(".full").textContent=fullLabel(current); }
+  function renderAll(){ renderDate(); renderSummary(); renderMeals(); }
+
+  // export / import (your backup safety net)
+  function collectAll(){
+    const out={version:1,exported:new Date().toISOString(),targets:targets,days:{}};
+    try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.indexOf("day:")===0){ out.days[k]=JSON.parse(localStorage.getItem(k)); } } }catch(e){}
+    out.days["day:"+keyOf(current)]={meals:JSON.parse(JSON.stringify(meals))};
+    return out;
+  }
+  function doExport(){
+    const blob=new Blob([JSON.stringify(collectAll(),null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob); const a=document.createElement("a");
+    a.href=url; a.download="daily-log-"+keyOf(new Date())+".json"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }
+  $("exportBtn").addEventListener("click",doExport);
+  $("importBtn").addEventListener("click",()=>$("importFile").click());
+  $("importFile").addEventListener("change",async e=>{
+    const file=e.target.files[0]; if(!file) return;
+    try{
+      const data=JSON.parse(await file.text());
+      if("targets" in data){ targets=data.targets||null; saveTargets(); }
+      if(data.days){ for(const k in data.days){ set(k, JSON.stringify(data.days[k])); } }
+      loadDay(); $("targetsBtn").classList.toggle("active",!!targets); renderAll();
+      $("status").className="status"; $("statusText").textContent="Logs imported";
+    }catch(err){ $("status").className="status err"; $("statusText").textContent="Import failed — not a valid file"; }
+    e.target.value="";
+  });
+
+  // events
+  $("prevDay").addEventListener("click",()=>{ current.setDate(current.getDate()-1); loadDay(); renderAll(); });
+  $("nextDay").addEventListener("click",()=>{ current.setDate(current.getDate()+1); loadDay(); renderAll(); });
+  $("addMeal").addEventListener("click",()=>{ meals.push({id:uid(),name:"Meal "+(meals.length+1),items:[]}); saveDay(); renderAll(); });
+
+  const scrim=$("scrim");
+  function openTargets(){ $("tKcal").value=targets&&targets.kcal?targets.kcal:""; $("tP").value=targets&&targets.protein?targets.protein:""; $("tC").value=targets&&targets.carbs?targets.carbs:""; $("tF").value=targets&&targets.fat?targets.fat:""; scrim.classList.add("open"); setTimeout(()=>$("tKcal").focus(),50); }
+  function closeTargets(){ scrim.classList.remove("open"); }
+  $("targetsBtn").addEventListener("click",openTargets);
+  $("cancelTargets").addEventListener("click",closeTargets);
+  $("saveTargets").addEventListener("click",()=>{ const t={kcal:num($("tKcal").value),protein:num($("tP").value),carbs:num($("tC").value),fat:num($("tF").value)}; targets=(t.kcal||t.protein||t.carbs||t.fat)?t:null; saveTargets(); $("targetsBtn").classList.toggle("active",!!targets); closeTargets(); renderSummary(); });
+  $("clearTargets").addEventListener("click",()=>{ targets=null; saveTargets(); $("targetsBtn").classList.remove("active"); closeTargets(); renderSummary(); });
+  scrim.addEventListener("click",e=>{ if(e.target===scrim) closeTargets(); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&scrim.classList.contains("open")) closeTargets(); });
+
+  // init
+  loadTargets(); loadDay(); $("targetsBtn").classList.toggle("active",!!targets); renderAll();
+  if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+})();
+</script>
+</body>
+</html>
